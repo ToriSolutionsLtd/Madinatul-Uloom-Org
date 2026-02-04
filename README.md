@@ -23,22 +23,31 @@
 
 ---
 
-## 🌟 Features
+## ✅ Current Status
 
+The live site is a public-facing brochure experience (Home, About, Programs, Campus & Facilities, Contact, Donate) with i18n and a downloadable prospectus. The admin portal and advanced platform modules are planned but not yet implemented.
+
+## 🌟 Features
 ### Public-Facing Website
-- 📅 **Prayer Times** - Accurate daily prayer schedules with Athan API integration
-- 🗓️ **Events Calendar** - Community events with RSVP functionality
-- 📖 **Sermon Archive** - Audio/video library with search and filtering
-- 📚 **Islamic Programs** - Quran circles, youth programs, and educational classes
-- 💰 **Online Donations** - Secure Stripe integration for Zakat, Sadaqah, and general donations
-- 🌐 **Multi-language** - Full i18n support (English, Arabic, Bengali)
+#### Live on site
+- ✅ **Core Pages** - Home, About, Programs, Campus & Facilities, Contact
+- ✅ **Prospectus Download** - PDF download from the website
+- ✅ **Donation Information** - Bank and bKash details displayed on the site
+- ✅ **Multi-language** - i18n support (English, Arabic, Bengali)
+
+#### Planned (Not yet implemented)
+- ⏳ **Prayer Times** - Accurate daily prayer schedules with Athan API integration
+- ⏳ **Events Calendar** - Community events with RSVP functionality
+- ⏳ **Sermon Archive** - Audio/video library with search and filtering
+- ⏳ **Online Donations** - Stripe integration for Zakat, Sadaqah, and general donations
 
 ### Admin Portal
-- 👥 **User Management** - Role-based access control (Admin, Imam, Volunteer, Member)
-- 📊 **Dashboard** - Comprehensive analytics and reporting
-- 📝 **Content Management** - Announcements, events, and sermon management
-- 💳 **Donation Tracking** - Financial reports and donor management
-- 📧 **Communication Tools** - Newsletter and notification system
+#### Planned (Not yet implemented)
+- ⏳ **User Management** - Role-based access control (Admin, Imam, Volunteer, Member)
+- ⏳ **Dashboard** - Comprehensive analytics and reporting
+- ⏳ **Content Management** - Announcements, events, and sermon management
+- ⏳ **Donation Tracking** - Financial reports and donor management
+- ⏳ **Communication Tools** - Newsletter and notification system
 
 ### Future Roadmap (Phase 2)
 - 🎓 LMS Integration (Moodle) for Islamic education
@@ -69,10 +78,10 @@
 ### DevOps & Tooling
 - **Monorepo**: [pnpm 9](https://pnpm.io/) workspaces + [Turborepo](https://turbo.build/)
 - **Containers**: [Docker](https://www.docker.com/) + Docker Compose
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions (Planned/Not yet implemented)
 - **Code Quality**: ESLint + Prettier + [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/okonet/lint-staged)
 - **Commits**: [Commitlint](https://commitlint.js.org/) with Conventional Commits
-- **Hosting**: Vercel (Frontend) + Railway/Fly.io (Backend)
+- **Hosting**: Vercel (Frontend) + Railway/Fly.io (Backend) (Planned/Not yet implemented for backend)
 
 ---
 
@@ -300,6 +309,7 @@ See [.env.example](.env.example) for all available variables.
 4. Configure environment variables
 
 ### Docker Production Build
+> Note: Production compose file is planned. Only `docker-compose.yml` exists currently.
 
 ```bash
 # Build production images
