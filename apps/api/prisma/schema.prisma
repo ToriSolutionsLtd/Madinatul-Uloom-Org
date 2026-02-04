@@ -1,0 +1,1533 @@
+// Prisma Schema for Madinatul Uloom
+// Modern Mosque Management Platform
+// Version: 2.0
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN     // Full system access
+  ADMIN           // Administrative access
+  CONTENT_EDITOR  // Manage content
+  EVENT_MANAGER   // Manage events
+  FINANCE_ADMIN   // View/manage donations
+  IMAM            // Religious leadership
+  TEACHER         // Instructors
+  VOLUNTEER       // Limited admin access
+  STUDENT         // Enrolled in programs
+  PARENT          // Parent/Guardian
+  MEMBER          // Regular member
+  GUEST           // Limited access
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+  SUSPENDED
+  BANNED
+}
+
+model User {
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  passwordHash        String?
+  
+  // Profile
+  firstName           String
+  lastName            String
+  displayName         String?
+  phone               String?
+  avatarUrl           String?
+  dateOfBirth         DateTime?  @db.Date
+  gender              String?    // male, female, other
+  
+  // Account Status
+  role                UserRole   @default(MEMBER)
+  status              UserStatus @default(PENDING_VERIFICATION)
+  emailVerified       Boolean    @default(false)
+  phoneVerified       Boolean    @default(false)
+  
+  // Security
+  twoFactorEnabled    Boolean    @default(false)
+  twoFactorSecret     String?
+  passwordChangedAt   DateTime?
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+  
+  // Preferences
+  language            String     @default("en")
+  timezone            String     @default("America/New_York")
+  
+  // External Auth
+  auth0Id             String?    @unique
+  clerkId             String?    @unique
+  googleId            String?    @unique
+  
+  // Metadata
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  lastLoginAt         DateTime?
+  lastActiveAt        DateTime?
+  createdBy           String?    // Admin who created the account
+  
+  // Relations
+  profile             UserProfile?
+  addresses           Address[]
+  donations           Donation[]
+  eventRegistrations  EventRegistration[]
+  programEnrollments  ProgramEnrollment[]
+  courseEnrollments   CourseEnrollment[]
+  attendanceRecords   AttendanceRecord[]
+  facilityBookings    FacilityBooking[]
+  notificationPrefs   NotificationPreference?
+  sessions            Session[]
+  refreshTokens       RefreshToken[]
+  auditLogs           AuditLog[]          @relation("AuditActor")
+  
+  // For Parent-Student relationship
+  parentOf            StudentParent[]     @relation("ParentRelation")
+  childOf             StudentParent[]     @relation("StudentRelation")
+  
+  // Subscriptions
+  newsletterSubscriber NewsletterSubscriber?
+  
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([lastName, firstName])
+  @@map("users")
+}
+
+model UserProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  
+  // Additional Info
+  bio                 String?  @db.Text
+  occupation          String?
+  employer            String?
+  emergencyContact    String?
+  emergencyPhone      String?
+  
+  // Islamic Info
+  reversionDate       DateTime? @db.Date
+  islamicKnowledge    String?   // beginner, intermediate, advanced
+  arabicProficiency   String?   // none, basic, intermediate, fluent
+  
+  // Interests & Skills
+  interests           String[]  // Areas of interest
+  skills              String[]  // Skills they can contribute
+  volunteerAreas      String[]  // Areas willing to volunteer
+  
+  // Social
+  linkedInUrl         String?
+  websiteUrl          String?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_profiles")
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  userId        String
+  
+  type          String   @default("home") // home, work, other
+  isPrimary     Boolean  @default(false)
+  
+  street1       String
+  street2       String?
+  city          String
+  state         String
+  postalCode    String
+  country       String   @default("US")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("addresses")
+}
+
+model StudentParent {
+  id            String   @id @default(cuid())
+  parentId      String
+  studentId     String
+  relationship  String   @default("parent") // parent, guardian, grandparent
+  isPrimary     Boolean  @default(false)
+  canPickup     Boolean  @default(true)
+  
+  parent        User     @relation("ParentRelation", fields: [parentId], references: [id], onDelete: Cascade)
+  student       User     @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([parentId, studentId])
+  @@map("student_parents")
+}
+
+// ============================================
+// SESSIONS & AUTH TOKENS
+// ============================================
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  
+  token         String   @unique
+  userAgent     String?
+  ipAddress     String?
+  
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  lastUsedAt    DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id            String   @id @default(cuid())
+  userId        String
+  
+  token         String   @unique
+  family        String   // Token family for rotation
+  isRevoked     Boolean  @default(false)
+  
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id            String   @id @default(cuid())
+  email         String
+  token         String   @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@index([email])
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id            String   @id @default(cuid())
+  email         String
+  token         String   @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@index([email])
+  @@index([token])
+  @@map("email_verification_tokens")
+}
+
+// ============================================
+// PRAYER TIMES
+// ============================================
+
+model PrayerTime {
+  id            String   @id @default(cuid())
+  date          DateTime @unique @db.Date
+  
+  // Athan Times
+  fajr          String
+  sunrise       String
+  dhuhr         String
+  asr           String
+  maghrib       String
+  isha          String
+  
+  // Iqama Times
+  fajrIqama     String?
+  dhuhrIqama    String?
+  asrIqama      String?
+  maghribIqama  String?
+  ishaIqama     String?
+  
+  // Jummah
+  jummah1       String?
+  jummah2       String?
+  jummah3       String?
+  
+  // Taraweeh (Ramadan)
+  taraweeh      String?
+  
+  // Eid
+  eid1          String?
+  eid2          String?
+  
+  // Source
+  calculationMethod String? // ISNA, MWL, Egyptian, etc.
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([date])
+  @@map("prayer_times")
+}
+
+// ============================================
+// EVENTS
+// ============================================
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  POSTPONED
+  COMPLETED
+}
+
+enum EventType {
+  LECTURE
+  CLASS
+  WORKSHOP
+  COMMUNITY
+  FUNDRAISER
+  YOUTH
+  SISTERS
+  BROTHERS
+  CHILDREN
+  FAMILY
+  INTERFAITH
+  SPECIAL
+  EID
+  RAMADAN
+}
+
+model Event {
+  id                    String      @id @default(cuid())
+  title                 String
+  slug                  String      @unique
+  description           String?     @db.Text
+  content               String?     @db.Text
+  imageUrl              String?
+  
+  type                  EventType   @default(COMMUNITY)
+  status                EventStatus @default(DRAFT)
+  
+  // Schedule
+  startDate             DateTime
+  endDate               DateTime?
+  allDay                Boolean     @default(false)
+  recurrence            Json?       // Recurrence rules (RRULE format)
+  
+  // Location
+  location              String?
+  roomId                String?
+  isOnline              Boolean     @default(false)
+  onlineUrl             String?
+  onlinePlatform        String?     // zoom, youtube, facebook
+  
+  // Registration
+  requiresRegistration  Boolean     @default(false)
+  capacity              Int?
+  registrationDeadline  DateTime?
+  waitlistEnabled       Boolean     @default(false)
+  
+  // Pricing
+  isFree                Boolean     @default(true)
+  price                 Decimal?    @db.Decimal(10, 2)
+  earlyBirdPrice        Decimal?    @db.Decimal(10, 2)
+  earlyBirdDeadline     DateTime?
+  
+  // Speaker/Host
+  speaker               String?
+  speakerBio            String?     @db.Text
+  speakerImageUrl       String?
+  
+  // Contact
+  contactName           String?
+  contactEmail          String?
+  contactPhone          String?
+  
+  // SEO
+  metaTitle             String?
+  metaDescription       String?
+  
+  // Counters
+  viewCount             Int         @default(0)
+  registrationCount     Int         @default(0)
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  publishedAt           DateTime?
+  
+  // Relations
+  room                  Room?       @relation(fields: [roomId], references: [id])
+  registrations         EventRegistration[]
+  tags                  TagsOnEvents[]
+  
+  @@index([slug])
+  @@index([startDate])
+  @@index([status])
+  @@index([type])
+  @@map("events")
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  WAITLISTED
+  CONFIRMED
+  ATTENDED
+  NO_SHOW
+  CANCELLED
+}
+
+model EventRegistration {
+  id            String             @id @default(cuid())
+  eventId       String
+  userId        String
+  
+  status        RegistrationStatus @default(REGISTERED)
+  
+  // Guest info (if not logged in)
+  guestName     String?
+  guestEmail    String?
+  guestPhone    String?
+  
+  // Additional
+  numberOfGuests Int              @default(0)
+  specialNeeds  String?
+  dietaryNeeds  String?
+  notes         String?
+  
+  // Check-in
+  checkedInAt   DateTime?
+  checkedInBy   String?
+  
+  // Payment (if applicable)
+  amountPaid    Decimal?          @db.Decimal(10, 2)
+  paymentId     String?
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  event         Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@map("event_registrations")
+}
+
+// ============================================
+// DONATIONS & FINANCE
+// ============================================
+
+enum DonationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+enum DonationType {
+  ONE_TIME
+  RECURRING
+  PLEDGE
+}
+
+enum DonationFund {
+  GENERAL
+  ZAKAT
+  SADAQAH
+  SADAQAH_JARIYAH
+  FIDYA
+  KAFFARAH
+  BUILDING
+  MAINTENANCE
+  EDUCATION
+  YOUTH
+  RAMADAN
+  QURBANI
+  EMERGENCY
+  REFUGEE
+  ORPHAN_SPONSORSHIP
+  SCHOLARSHIP
+}
+
+model Donation {
+  id                    String         @id @default(cuid())
+  userId                String?
+  campaignId            String?
+  
+  // Amount
+  amount                Decimal        @db.Decimal(10, 2)
+  currency              String         @default("USD")
+  processingFee         Decimal?       @db.Decimal(10, 2)
+  netAmount             Decimal?       @db.Decimal(10, 2)
+  
+  // Details
+  fund                  DonationFund   @default(GENERAL)
+  type                  DonationType   @default(ONE_TIME)
+  status                DonationStatus @default(PENDING)
+  
+  // Donor Info (for guest/anonymous)
+  donorEmail            String?
+  donorName             String?
+  donorPhone            String?
+  donorAddress          Json?          // Address for tax receipts
+  
+  // Stripe
+  stripePaymentIntentId String?        @unique
+  stripeChargeId        String?
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  stripeInvoiceId       String?
+  paymentMethod         String?        // card, bank_transfer, etc.
+  lastFour              String?        // Last 4 digits of card
+  
+  // Recurring
+  recurringInterval     String?        // weekly, monthly, yearly
+  nextPaymentDate       DateTime?
+  
+  // Options
+  isAnonymous           Boolean        @default(false)
+  coverFees             Boolean        @default(false)
+  isTaxDeductible       Boolean        @default(true)
+  
+  // Communication
+  dedicatedTo           String?        // In memory of / In honor of
+  dedicationType        String?        // memory, honor
+  sendAcknowledgment    Boolean        @default(true)
+  acknowledgmentSentAt  DateTime?
+  
+  // Receipt
+  receiptNumber         String?        @unique
+  receiptSentAt         DateTime?
+  
+  // Notes
+  publicNote            String?        // Displayed publicly
+  privateNote           String?        // Internal only
+  
+  // Metadata
+  source                String?        // website, kiosk, event, etc.
+  ipAddress             String?
+  userAgent             String?
+  
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  completedAt           DateTime?
+  
+  // Relations
+  user                  User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  campaign              Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([campaignId])
+  @@index([fund])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([stripePaymentIntentId])
+  @@map("donations")
+}
+
+model Campaign {
+  id                String    @id @default(cuid())
+  title             String
+  slug              String    @unique
+  description       String?   @db.Text
+  content           String?   @db.Text
+  imageUrl          String?
+  
+  // Goals
+  goalAmount        Decimal   @db.Decimal(12, 2)
+  currentAmount     Decimal   @default(0) @db.Decimal(12, 2)
+  donorCount        Int       @default(0)
+  
+  // Fund
+  fund              DonationFund @default(GENERAL)
+  
+  // Schedule
+  startDate         DateTime
+  endDate           DateTime?
+  
+  // Status
+  isActive          Boolean   @default(true)
+  isFeatured        Boolean   @default(false)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  donations         Donation[]
+  
+  @@index([slug])
+  @@index([isActive])
+  @@index([fund])
+  @@map("campaigns")
+}
+
+model RecurringDonation {
+  id                    String         @id @default(cuid())
+  userId                String
+  
+  amount                Decimal        @db.Decimal(10, 2)
+  currency              String         @default("USD")
+  fund                  DonationFund   @default(GENERAL)
+  
+  interval              String         // weekly, biweekly, monthly, quarterly, yearly
+  dayOfMonth            Int?           // For monthly
+  dayOfWeek             Int?           // For weekly (0-6)
+  
+  // Stripe
+  stripeSubscriptionId  String         @unique
+  stripeCustomerId      String
+  stripePriceId         String
+  
+  // Status
+  status                String         @default("active") // active, paused, cancelled
+  pausedAt              DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  
+  // Tracking
+  lastPaymentAt         DateTime?
+  nextPaymentAt         DateTime?
+  totalDonated          Decimal        @default(0) @db.Decimal(12, 2)
+  paymentCount          Int            @default(0)
+  
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([stripeSubscriptionId])
+  @@map("recurring_donations")
+}
+
+model DonationReceipt {
+  id              String   @id @default(cuid())
+  donationId      String?
+  userId          String?
+  
+  receiptNumber   String   @unique
+  year            Int
+  
+  // Summary
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  taxDeductible   Decimal  @db.Decimal(12, 2)
+  
+  // Donor Info (snapshot)
+  donorName       String
+  donorEmail      String
+  donorAddress    Json
+  
+  // PDF
+  pdfUrl          String?
+  
+  sentAt          DateTime?
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([year])
+  @@map("donation_receipts")
+}
+
+// ============================================
+// PROGRAMS & EDUCATION
+// ============================================
+
+enum ProgramCategory {
+  QURAN
+  HIFZ
+  ARABIC
+  ISLAMIC_STUDIES
+  FIQH
+  SEERAH
+  TAFSIR
+  TAJWEED
+  CHILDREN
+  YOUTH
+  ADULTS
+  SISTERS
+  BROTHERS
+  SENIORS
+  NEW_MUSLIM
+  FAMILY
+  MARRIAGE_PREP
+  COUNSELING
+}
+
+enum ProgramStatus {
+  DRAFT
+  ACTIVE
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+model Program {
+  id                    String          @id @default(cuid())
+  title                 String
+  slug                  String          @unique
+  description           String?         @db.Text
+  content               String?         @db.Text
+  imageUrl              String?
+  
+  category              ProgramCategory
+  status                ProgramStatus   @default(DRAFT)
+  
+  // Target Audience
+  ageGroup              String?         // children, youth, adults, all
+  minAge                Int?
+  maxAge                Int?
+  genderRestriction     String?         // male, female, all
+  prerequisites         String?
+  
+  // Schedule
+  schedule              String?         // Human readable: "Sundays 10am-12pm"
+  startDate             DateTime?
+  endDate               DateTime?
+  sessionDuration       Int?            // Minutes per session
+  totalSessions         Int?
+  
+  // Capacity
+  minEnrollment         Int?
+  maxEnrollment         Int?
+  currentEnrollment     Int             @default(0)
+  waitlistEnabled       Boolean         @default(false)
+  
+  // Pricing
+  isFree                Boolean         @default(true)
+  price                 Decimal?        @db.Decimal(10, 2)
+  familyPrice           Decimal?        @db.Decimal(10, 2)
+  scholarshipAvailable  Boolean         @default(false)
+  
+  // Location
+  roomId                String?
+  isOnline              Boolean         @default(false)
+  onlineUrl             String?
+  
+  // Instructor
+  instructorId          String?
+  instructorName        String?
+  instructorBio         String?         @db.Text
+  
+  // Materials
+  materials             Json?           // List of required materials
+  
+  // LMS Integration
+  moodleCourseId        String?
+  hasOnlineCourse       Boolean         @default(false)
+  
+  // Contact
+  contactEmail          String?
+  contactPhone          String?
+  
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  // Relations
+  room                  Room?           @relation(fields: [roomId], references: [id])
+  courses               Course[]
+  enrollments           ProgramEnrollment[]
+  tags                  TagsOnPrograms[]
+  
+  @@index([slug])
+  @@index([category])
+  @@index([status])
+  @@map("programs")
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  WAITLISTED
+  ENROLLED
+  DROPPED
+  COMPLETED
+  CANCELLED
+}
+
+model ProgramEnrollment {
+  id                String           @id @default(cuid())
+  programId         String
+  userId            String
+  
+  status            EnrollmentStatus @default(PENDING)
+  
+  // Student info (for minors)
+  studentName       String?
+  studentAge        Int?
+  
+  // Parent info
+  parentUserId      String?
+  
+  // Payment
+  amountPaid        Decimal?         @db.Decimal(10, 2)
+  paymentId         String?
+  scholarshipApplied Boolean         @default(false)
+  scholarshipAmount Decimal?         @db.Decimal(10, 2)
+  
+  // Notes
+  notes             String?
+  adminNotes        String?          @db.Text
+  
+  enrolledAt        DateTime?
+  droppedAt         DateTime?
+  completedAt       DateTime?
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  program           Program          @relation(fields: [programId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([programId, userId])
+  @@index([programId])
+  @@index([userId])
+  @@index([status])
+  @@map("program_enrollments")
+}
+
+// ============================================
+// COURSES (Sub-units of Programs)
+// ============================================
+
+model Course {
+  id                String   @id @default(cuid())
+  programId         String
+  
+  title             String
+  description       String?  @db.Text
+  orderIndex        Int      @default(0)
+  
+  // Schedule
+  dayOfWeek         Int?     // 0-6 (Sunday-Saturday)
+  startTime         String?
+  endTime           String?
+  startDate         DateTime?
+  endDate           DateTime?
+  
+  // Instructor
+  instructorId      String?
+  instructorName    String?
+  
+  // Room
+  roomId            String?
+  
+  // LMS
+  moodleCourseId    String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  program           Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  room              Room?    @relation(fields: [roomId], references: [id])
+  enrollments       CourseEnrollment[]
+  sessions          CourseSession[]
+  
+  @@index([programId])
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id                String   @id @default(cuid())
+  courseId          String
+  userId            String
+  
+  status            String   @default("enrolled") // enrolled, dropped, completed
+  grade             String?  // A, B, C, Pass, Incomplete
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@index([userId])
+  @@map("course_enrollments")
+}
+
+model CourseSession {
+  id                String   @id @default(cuid())
+  courseId          String
+  
+  title             String?
+  date              DateTime @db.Date
+  startTime         String
+  endTime           String
+  
+  // Content
+  topic             String?
+  description       String?  @db.Text
+  
+  // Status
+  status            String   @default("scheduled") // scheduled, completed, cancelled
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  attendanceRecords AttendanceRecord[]
+  
+  @@index([courseId])
+  @@index([date])
+  @@map("course_sessions")
+}
+
+model AttendanceRecord {
+  id                String        @id @default(cuid())
+  sessionId         String
+  userId            String
+  
+  status            String        @default("present") // present, absent, late, excused
+  notes             String?
+  
+  checkedInAt       DateTime?
+  checkedOutAt      DateTime?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  session           CourseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+  @@map("attendance_records")
+}
+
+// ============================================
+// SERMONS & MEDIA
+// ============================================
+
+enum SermonType {
+  KHUTBAH_JUMMAH
+  KHUTBAH_EID
+  LECTURE
+  TAFSIR
+  HALAQA
+  PODCAST
+  INTERVIEW
+  PANEL
+  OTHER
+}
+
+model Sermon {
+  id                String     @id @default(cuid())
+  title             String
+  slug              String     @unique
+  description       String?    @db.Text
+  content           String?    @db.Text  // Full transcript or notes
+  
+  type              SermonType @default(KHUTBAH_JUMMAH)
+  date              DateTime
+  
+  // Speaker
+  speakerId         String?
+  speakerName       String
+  speakerTitle      String?
+  
+  // Media
+  videoUrl          String?
+  audioUrl          String?
+  thumbnailUrl      String?
+  duration          Int?       // Seconds
+  fileSize          Int?       // Bytes
+  
+  // Transcript
+  transcript        String?    @db.Text
+  hasTranscript     Boolean    @default(false)
+  
+  // References
+  quranReferences   String[]   // e.g., ["2:255", "3:102"]
+  hadithReferences  String[]
+  topics            String[]
+  
+  // Status
+  isPublished       Boolean    @default(false)
+  isFeatured        Boolean    @default(false)
+  
+  // Engagement
+  viewCount         Int        @default(0)
+  downloadCount     Int        @default(0)
+  likeCount         Int        @default(0)
+  
+  // SEO
+  metaTitle         String?
+  metaDescription   String?
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  publishedAt       DateTime?
+  
+  // Relations
+  speaker           Speaker?   @relation(fields: [speakerId], references: [id])
+  tags              TagsOnSermons[]
+  
+  @@index([slug])
+  @@index([date])
+  @@index([speakerId])
+  @@index([type])
+  @@index([isPublished])
+  @@map("sermons")
+}
+
+model Speaker {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  title             String?  // Sheikh, Imam, Dr., etc.
+  bio               String?  @db.Text
+  imageUrl          String?
+  
+  // Contact
+  email             String?
+  website           String?
+  
+  // Social
+  youtubeUrl        String?
+  twitterUrl        String?
+  facebookUrl       String?
+  instagramUrl      String?
+  
+  // Status
+  isActive          Boolean  @default(true)
+  isResident        Boolean  @default(false) // Resident speaker/imam
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  sermons           Sermon[]
+  
+  @@index([slug])
+  @@map("speakers")
+}
+
+// ============================================
+// FACILITIES & ROOMS
+// ============================================
+
+model Facility {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?  @db.Text
+  imageUrl          String?
+  
+  // Location
+  address           String?
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
+  
+  // Contact
+  phone             String?
+  email             String?
+  
+  // Hours
+  operatingHours    Json?    // {monday: {open: "9:00", close: "21:00"}, ...}
+  
+  isActive          Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  rooms             Room[]
+  
+  @@map("facilities")
+}
+
+model Room {
+  id                String   @id @default(cuid())
+  facilityId        String
+  
+  name              String
+  description       String?
+  imageUrl          String?
+  
+  // Capacity
+  capacity          Int
+  minCapacity       Int?
+  
+  // Features
+  hasAV             Boolean  @default(false)
+  hasProjector      Boolean  @default(false)
+  hasWhiteboard     Boolean  @default(false)
+  hasWifi           Boolean  @default(true)
+  isWheelchairAccessible Boolean @default(true)
+  amenities         String[] // List of amenities
+  
+  // Booking
+  isBookable        Boolean  @default(true)
+  requiresApproval  Boolean  @default(true)
+  hourlyRate        Decimal? @db.Decimal(10, 2)
+  
+  // Restrictions
+  genderRestriction String?  // male, female, all
+  
+  isActive          Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  facility          Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  bookings          FacilityBooking[]
+  events            Event[]
+  programs          Program[]
+  courses           Course[]
+  
+  @@index([facilityId])
+  @@map("rooms")
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+model FacilityBooking {
+  id                String        @id @default(cuid())
+  roomId            String
+  userId            String
+  
+  // Time
+  date              DateTime      @db.Date
+  startTime         String
+  endTime           String
+  
+  // Details
+  title             String
+  purpose           String?
+  expectedAttendees Int?
+  setupRequirements String?       @db.Text
+  
+  // Status
+  status            BookingStatus @default(PENDING)
+  
+  // Approval
+  approvedBy        String?
+  approvedAt        DateTime?
+  rejectionReason   String?
+  
+  // Payment
+  totalCost         Decimal?      @db.Decimal(10, 2)
+  paymentStatus     String?       // pending, paid, waived
+  
+  // Contact
+  contactName       String
+  contactPhone      String?
+  contactEmail      String
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  room              Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([roomId])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@map("facility_bookings")
+}
+
+// ============================================
+// ANNOUNCEMENTS & CONTENT
+// ============================================
+
+enum AnnouncementType {
+  GENERAL
+  URGENT
+  EVENT
+  PRAYER_TIME
+  CLOSURE
+  MAINTENANCE
+}
+
+model Announcement {
+  id                String           @id @default(cuid())
+  title             String
+  content           String           @db.Text
+  excerpt           String?
+  imageUrl          String?
+  
+  type              AnnouncementType @default(GENERAL)
+  
+  // Display
+  isPublished       Boolean          @default(false)
+  isPinned          Boolean          @default(false)
+  showOnHomepage    Boolean          @default(true)
+  
+  // Schedule
+  publishAt         DateTime?
+  unpublishAt       DateTime?
+  
+  // Author
+  authorId          String?
+  authorName        String?
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  publishedAt       DateTime?
+  
+  @@index([isPublished])
+  @@index([type])
+  @@index([publishAt])
+  @@map("announcements")
+}
+
+// ============================================
+// CONTACT & INQUIRIES
+// ============================================
+
+enum InquiryType {
+  GENERAL
+  MEMBERSHIP
+  PROGRAMS
+  DONATIONS
+  FACILITIES
+  VOLUNTEERING
+  MARRIAGE
+  FUNERAL
+  COUNSELING
+  OTHER
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  WAITING_RESPONSE
+  RESOLVED
+  CLOSED
+}
+
+model ContactInquiry {
+  id                String        @id @default(cuid())
+  
+  // Contact Info
+  name              String
+  email             String
+  phone             String?
+  
+  // Inquiry
+  type              InquiryType   @default(GENERAL)
+  subject           String
+  message           String        @db.Text
+  
+  // Status
+  status            InquiryStatus @default(NEW)
+  priority          String        @default("normal") // low, normal, high, urgent
+  
+  // Assignment
+  assignedTo        String?
+  assignedAt        DateTime?
+  
+  // Resolution
+  resolution        String?       @db.Text
+  resolvedBy        String?
+  resolvedAt        DateTime?
+  
+  // Internal
+  internalNotes     String?       @db.Text
+  
+  // Metadata
+  source            String?       // website, phone, email, walk-in
+  ipAddress         String?
+  userAgent         String?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("contact_inquiries")
+}
+
+// ============================================
+// NEWSLETTER & COMMUNICATION
+// ============================================
+
+model Newsletter {
+  id                String   @id @default(cuid())
+  title             String
+  subject           String
+  content           String   @db.Text
+  previewText       String?
+  
+  // Design
+  templateId        String?
+  
+  // Status
+  status            String   @default("draft") // draft, scheduled, sending, sent
+  
+  // Schedule
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  
+  // Stats
+  recipientCount    Int      @default(0)
+  openCount         Int      @default(0)
+  clickCount        Int      @default(0)
+  bounceCount       Int      @default(0)
+  unsubscribeCount  Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([status])
+  @@map("newsletters")
+}
+
+model NewsletterSubscriber {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  userId            String?  @unique
+  
+  firstName         String?
+  lastName          String?
+  
+  // Preferences
+  frequency         String   @default("weekly") // daily, weekly, monthly
+  interests         String[] // events, sermons, education, donations
+  
+  // Status
+  isActive          Boolean  @default(true)
+  confirmedAt       DateTime?
+  unsubscribedAt    DateTime?
+  unsubscribeReason String?
+  
+  // Tracking
+  source            String?  // website, event, import
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([email])
+  @@index([isActive])
+  @@map("newsletter_subscribers")
+}
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  
+  // Email Preferences
+  emailEnabled      Boolean  @default(true)
+  emailPrayerTimes  Boolean  @default(false)
+  emailEvents       Boolean  @default(true)
+  emailAnnouncements Boolean @default(true)
+  emailNewsletter   Boolean  @default(true)
+  emailDonationReceipts Boolean @default(true)
+  
+  // SMS Preferences
+  smsEnabled        Boolean  @default(false)
+  smsPrayerTimes    Boolean  @default(false)
+  smsEvents         Boolean  @default(false)
+  smsUrgent         Boolean  @default(true)
+  
+  // Push Preferences
+  pushEnabled       Boolean  @default(false)
+  pushPrayerTimes   Boolean  @default(false)
+  pushEvents        Boolean  @default(true)
+  pushAnnouncements Boolean  @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notification_preferences")
+}
+
+// ============================================
+// TAGS & TAXONOMY
+// ============================================
+
+model Tag {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  slug              String   @unique
+  description       String?
+  color             String?  // Hex color for UI
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  events            TagsOnEvents[]
+  programs          TagsOnPrograms[]
+  sermons           TagsOnSermons[]
+  
+  @@map("tags")
+}
+
+model TagsOnEvents {
+  eventId           String
+  tagId             String
+  
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag               Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([eventId, tagId])
+  @@map("tags_on_events")
+}
+
+model TagsOnPrograms {
+  programId         String
+  tagId             String
+  
+  program           Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tag               Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([programId, tagId])
+  @@map("tags_on_programs")
+}
+
+model TagsOnSermons {
+  sermonId          String
+  tagId             String
+  
+  sermon            Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  tag               Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([sermonId, tagId])
+  @@map("tags_on_sermons")
+}
+
+// ============================================
+// AUDIT LOG
+// ============================================
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  
+  // Actor
+  userId            String?  // Who performed the action
+  actorType         String   @default("user") // user, system, api
+  actorIp           String?
+  actorUserAgent    String?
+  
+  // Action
+  action            String   // create, update, delete, login, etc.
+  resource          String   // user, donation, event, etc.
+  resourceId        String?  // ID of the affected resource
+  
+  // Details
+  previousData      Json?    // State before change
+  newData           Json?    // State after change
+  metadata          Json?    // Additional context
+  
+  // Status
+  status            String   @default("success") // success, failure
+  errorMessage      String?
+  
+  createdAt         DateTime @default(now())
+  
+  actor             User?    @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// SETTINGS & CONFIGURATION
+// ============================================
+
+model Setting {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  value             Json
+  description       String?
+  
+  // Grouping
+  group             String   @default("general") // general, prayer, donation, email
+  
+  // Type hint
+  type              String   @default("string") // string, number, boolean, json
+  
+  // Access
+  isPublic          Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([group])
+  @@map("settings")
+}
+
+// ============================================
+// FILE UPLOADS
+// ============================================
+
+model Upload {
+  id                String   @id @default(cuid())
+  
+  filename          String
+  originalName      String
+  mimeType          String
+  size              Int      // Bytes
+  
+  // Storage
+  storageProvider   String   @default("local") // local, s3, r2
+  storagePath       String
+  publicUrl         String?
+  
+  // Metadata
+  width             Int?     // For images
+  height            Int?     // For images
+  duration          Int?     // For audio/video (seconds)
+  
+  // Association
+  entityType        String?  // user, event, sermon, etc.
+  entityId          String?
+  
+  // Uploader
+  uploadedBy        String?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@map("uploads")
+}

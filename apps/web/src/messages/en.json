@@ -1,0 +1,145 @@
+{
+  "common": {
+    "appName": "Madinatul Uloom",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "programs": "Programs",
+    "campus": "Campus & Facilities",
+    "events": "Events",
+    "sermons": "Sermons",
+    "donate": "Donate",
+    "contact": "Contact",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "prayerTimes": "Prayer Times"
+  },
+  "home": {
+    "hero": {
+      "title": "Welcome to Madinatul Uloom",
+      "subtitle": "A Center for Islamic Learning and Community",
+      "cta": "Join Our Community"
+    },
+    "prayerTimes": {
+      "title": "Today's Prayer Times",
+      "fajr": "Fajr",
+      "sunrise": "Sunrise",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha",
+      "jummah": "Jumu'ah"
+    },
+    "upcomingEvents": {
+      "title": "Upcoming Events",
+      "viewAll": "View All Events",
+      "noEvents": "No upcoming events"
+    },
+    "announcements": {
+      "title": "Latest Announcements"
+    }
+  },
+  "programs": {
+    "title": "Our Programs",
+    "subtitle": "Islamic education for all ages",
+    "categories": {
+      "all": "All Programs",
+      "children": "Children",
+      "youth": "Youth",
+      "adults": "Adults",
+      "sisters": "Sisters"
+    },
+    "enroll": "Enroll Now",
+    "learnMore": "Learn More"
+  },
+  "donate": {
+    "title": "Support Our Mission",
+    "subtitle": "Your generosity helps us serve the community",
+    "oneTime": "One-Time",
+    "monthly": "Monthly",
+    "amount": "Amount",
+    "customAmount": "Custom Amount",
+    "selectFund": "Select Fund",
+    "funds": {
+      "general": "General Fund",
+      "zakat": "Zakat",
+      "sadaqah": "Sadaqah",
+      "building": "Building Fund",
+      "education": "Education Fund"
+    },
+    "donateNow": "Donate Now",
+    "thankYou": "Thank you for your generous donation!"
+  },
+  "events": {
+    "title": "Events & Activities",
+    "calendar": "Calendar View",
+    "list": "List View",
+    "upcoming": "Upcoming",
+    "past": "Past Events",
+    "register": "Register",
+    "details": "Event Details"
+  },
+  "sermons": {
+    "title": "Sermons & Lectures",
+    "latest": "Latest",
+    "popular": "Most Popular",
+    "search": "Search sermons...",
+    "watchNow": "Watch Now",
+    "listenNow": "Listen Now",
+    "download": "Download"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "hours": "Office Hours",
+    "form": {
+      "name": "Your Name",
+      "email": "Your Email",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send Message"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "footer": {
+    "about": "About Madinatul Uloom",
+    "quickLinks": "Quick Links",
+    "contact": "Contact Info",
+    "followUs": "Follow Us",
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Subscribe to receive updates about admissions and campus news.",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "note": "We respect your privacy. Unsubscribe anytime."
+    },
+    "copyright": "© {year} Madinatul Uloom. All rights reserved."
+  }
+}
