@@ -4,12 +4,20 @@
   <h1>🕌 Madinatul Uloom</h1>
   <p><strong>A comprehensive full-stack platform for modern mosque management</strong></p>
   
+  ![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
+  ![pnpm](https://img.shields.io/badge/pnpm-9%2B-F69220?logo=pnpm&logoColor=white)
+  ![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)
+  ![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?logo=nestjs&logoColor=white)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)
+
   <p>
     <a href="#features">Features</a> •
     <a href="#tech-stack">Tech Stack</a> •
     <a href="#getting-started">Getting Started</a> •
     <a href="#project-structure">Structure</a> •
-    <a href="#development">Development</a>
+    <a href="#development">Development</a> •
+    <a href="#contributing">Contributing</a>
   </p>
 </div>
 
@@ -51,15 +59,19 @@
 
 ### Backend
 - **Framework**: [NestJS 10](https://nestjs.com/)
-- **Database**: [PostgreSQL 16](https://www.postgresql.org/) + [Prisma ORM](https://www.prisma.io/)
-- **Caching**: [Redis 7](https://redis.io/)
-- **Authentication**: JWT (Passport.js)
+- **Database**: [PostgreSQL 16](https://www.postgresql.org/) + [Prisma ORM 6](https://www.prisma.io/)
+- **Caching**: [Redis 7](https://redis.io/) + [ioredis](https://github.com/redis/ioredis)
+- **Authentication**: JWT with [Passport.js](http://www.passportjs.org/)
 - **Payments**: [Stripe](https://stripe.com/)
+- **API Documentation**: [Swagger/OpenAPI](https://swagger.io/)
+- **Validation**: [class-validator](https://github.com/typestack/class-validator) + [Zod](https://zod.dev/)
 
-### DevOps
-- **Monorepo**: [pnpm](https://pnpm.io/) workspaces + [Turborepo](https://turbo.build/)
-- **Containers**: [Docker](https://www.docker.com/)
+### DevOps & Tooling
+- **Monorepo**: [pnpm 9](https://pnpm.io/) workspaces + [Turborepo](https://turbo.build/)
+- **Containers**: [Docker](https://www.docker.com/) + Docker Compose
 - **CI/CD**: GitHub Actions
+- **Code Quality**: ESLint + Prettier + [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/okonet/lint-staged)
+- **Commits**: [Commitlint](https://commitlint.js.org/) with Conventional Commits
 - **Hosting**: Vercel (Frontend) + Railway/Fly.io (Backend)
 
 ---
@@ -81,13 +93,14 @@ madinatul-uloom-core/
 │   └── api/                    # NestJS backend
 │       ├── src/
 │       │   ├── modules/        # Feature modules
-│       │   │   ├── auth/       # Authentication
+│       │   │   ├── auth/       # Authentication & JWT
 │       │   │   ├── users/      # User management
 │       │   │   ├── events/     # Event management
 │       │   │   ├── donations/  # Donation processing
 │       │   │   ├── programs/   # Islamic programs
 │       │   │   ├── sermons/    # Sermon archive
-│       │   │   └── prayer-times/  # Prayer schedules
+│       │   │   ├── prayer-times/  # Prayer schedules
+│       │   │   └── health/     # Health check endpoint
 │       │   └── prisma/         # Database service
 │       └── prisma/
 │           └── schema.prisma   # Database schema
@@ -113,7 +126,7 @@ madinatul-uloom-core/
 ### Prerequisites
 
 - **Node.js** 20+ ([Download](https://nodejs.org/))
-- **pnpm** 9+ (`npm install -g pnpm`)
+- **pnpm** 9+ (`npm install -g pnpm` or `corepack enable`)
 - **Docker** Desktop ([Download](https://www.docker.com/products/docker-desktop/))
 
 ### Quick Setup
@@ -121,8 +134,8 @@ madinatul-uloom-core/
 #### Windows (PowerShell)
 ```powershell
 # Clone the repository
-git clone https://github.com/your-org/madinatul-uloom-core.git
-cd madinatul-uloom-core
+git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
+cd Madinatul-Uloom-Org
 
 # Run setup script
 .\scripts\setup.ps1
@@ -131,8 +144,8 @@ cd madinatul-uloom-core
 #### macOS/Linux (Bash)
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/madinatul-uloom-core.git
-cd madinatul-uloom-core
+git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
+cd Madinatul-Uloom-Org
 
 # Make setup script executable and run
 chmod +x scripts/setup.sh
@@ -142,8 +155,8 @@ chmod +x scripts/setup.sh
 #### Manual Setup
 ```bash
 # 1. Clone and enter directory
-git clone https://github.com/your-org/madinatul-uloom-core.git
-cd madinatul-uloom-core
+git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
+cd Madinatul-Uloom-Org
 
 # 2. Copy environment files
 cp .env.example .env
@@ -185,18 +198,15 @@ pnpm dev
 ```bash
 # Development
 pnpm dev              # Start all apps in development mode
-pnpm dev:web          # Start frontend only
-pnpm dev:api          # Start backend only
 
 # Building
 pnpm build            # Build all packages
-pnpm build:web        # Build frontend
-pnpm build:api        # Build backend
 
 # Code Quality
 pnpm lint             # Run ESLint
 pnpm lint:fix         # Fix ESLint issues
 pnpm format           # Format with Prettier
+pnpm format:check     # Check formatting without changes
 pnpm typecheck        # Run TypeScript checks
 
 # Database
@@ -204,11 +214,9 @@ pnpm db:generate      # Generate Prisma client
 pnpm db:push          # Push schema to database
 pnpm db:migrate       # Run migrations
 pnpm db:studio        # Open Prisma Studio
-pnpm db:seed          # Seed database
 
-# Testing
-pnpm test             # Run all tests
-pnpm test:e2e         # Run E2E tests
+# Cleaning
+pnpm clean            # Clean all build outputs and node_modules
 ```
 
 ### Commit Convention
@@ -315,7 +323,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is proprietary software. All rights reserved.
 
 ---
 
@@ -323,7 +331,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with ❤️ for the Muslim community
 - Inspired by modern mosque needs and community feedback
-- Thanks to all contributors and supporters
+- Developed by [Tori Solutions Ltd](https://github.com/ToriSolutionsLtd)
 
 ---
 
@@ -331,6 +339,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   <p><strong>Madinatul Uloom</strong> - Empowering mosques with modern technology</p>
   <p>
     <a href="https://madinatululoom.org">Website</a> •
-    <a href="mailto:dev@madinatululoom.org">Contact</a>
+    <a href="mailto:dev@madinatululoom.org">Contact</a> •
+    <a href="https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org">GitHub</a>
   </p>
 </div>
