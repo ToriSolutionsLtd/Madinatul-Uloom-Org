@@ -1,11 +1,16 @@
+/* global process */
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import { FlatCompat } from '@eslint/eslintrc';
 import prettier from 'eslint-config-prettier';
+import tseslint from 'typescript-eslint';
+
+const compat = new FlatCompat({ baseDirectory: process.cwd() });
 
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
+  ...compat.extends('next/core-web-vitals'),
   {
     ignores: [
       '**/node_modules/**',
