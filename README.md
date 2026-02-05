@@ -143,8 +143,8 @@ madinatul-uloom-core/
 #### Windows (PowerShell)
 ```powershell
 # Clone the repository
-git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
-cd Madinatul-Uloom-Org
+git clone https://github.com/Tori-Solutions/Madinatul-Uloom.git
+cd Madinatul-Uloom
 
 # Run setup script
 .\scripts\setup.ps1
@@ -153,8 +153,8 @@ cd Madinatul-Uloom-Org
 #### macOS/Linux (Bash)
 ```bash
 # Clone the repository
-git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
-cd Madinatul-Uloom-Org
+git clone https://github.com/Tori-Solutions/Madinatul-Uloom.git
+cd Madinatul-Uloom
 
 # Make setup script executable and run
 chmod +x scripts/setup.sh
@@ -164,8 +164,8 @@ chmod +x scripts/setup.sh
 #### Manual Setup
 ```bash
 # 1. Clone and enter directory
-git clone https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org.git
-cd Madinatul-Uloom-Org
+git clone https://github.com/Tori-Solutions/Madinatul-Uloom.git
+cd Madinatul-Uloom
 
 # 2. Copy environment files
 cp .env.example .env
@@ -289,7 +289,7 @@ pnpm dlx shadcn@latest add table
 | `POSTMARK_API_KEY` | Postmark email API key |
 | `SENTRY_DSN` | Sentry error tracking DSN |
 
-See [.env.example](.env.example) for all available variables.
+See [.env.example](https://github.com/Tori-Solutions/Madinatul-Uloom/blob/main/.env.example) for all available variables.
 
 ---
 
@@ -341,7 +341,7 @@ This project is proprietary software. All rights reserved.
 
 - Built with ❤️ for the Muslim community
 - Inspired by modern mosque needs and community feedback
-- Developed by [Tori Solutions Ltd](https://github.com/ToriSolutionsLtd)
+- Developed by [Tori Solutions](https://github.com/Tori-Solutions)
 
 ---
 
@@ -350,6 +350,6 @@ This project is proprietary software. All rights reserved.
   <p>
     <a href="https://madinatululoom.org">Website</a> •
     <a href="mailto:dev@madinatululoom.org">Contact</a> •
-    <a href="https://github.com/ToriSolutionsLtd/Madinatul-Uloom-Org">GitHub</a>
+    <a href="https://github.com/Tori-Solutions/Madinatul-Uloom">GitHub</a>
   </p>
 </div>
