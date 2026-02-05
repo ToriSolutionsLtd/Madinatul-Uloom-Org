@@ -3,6 +3,8 @@
     "appName": "Madinatul Uloom",
     "loading": "Loading...",
     "error": "Something went wrong",
+    "notFoundTitle": "Page not found",
+    "notFoundMessage": "The page you are looking for does not exist or has moved.",
     "retry": "Try again",
     "save": "Save",
     "cancel": "Cancel",
@@ -13,6 +15,7 @@
     "filter": "Filter",
     "submit": "Submit",
     "back": "Back",
+    "backHome": "Back to home",
     "next": "Next",
     "previous": "Previous"
   },
@@ -136,8 +139,11 @@
     "newsletter": {
       "title": "Newsletter",
       "description": "Subscribe to receive updates about admissions and campus news.",
+      "emailLabel": "Email address",
       "placeholder": "Enter your email",
       "subscribe": "Subscribe",
+      "success": "Thanks for subscribing! We will be in touch soon.",
+      "invalid": "Please enter a valid email address.",
       "note": "We respect your privacy. Unsubscribe anytime."
     },
     "copyright": "© {year} Madinatul Uloom. All rights reserved."

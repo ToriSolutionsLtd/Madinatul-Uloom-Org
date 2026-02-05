@@ -56,6 +56,12 @@ export default async function RootLayout({ children, params }: Props) {
       <body
         className={`${inter.variable} ${notoArabic.variable} ${notoBengali.variable} ${bodyFont} antialiased`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:z-[60] focus:top-4 focus:left-4 focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+        >
+          Skip to content
+        </a>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

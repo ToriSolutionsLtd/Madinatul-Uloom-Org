@@ -58,6 +58,9 @@ export function PrayerTimesWidget() {
     timeFormat: '12h',
   });
 
+  const sectionClassName =
+    'relative z-20 mx-auto -mt-16 w-full max-w-[1280px] px-4 sm:-mt-24 sm:px-6 md:-mt-32 lg:px-8';
+
   const gregorianDate = useMemo(() => {
     if (!date?.gregorian) return null;
     const { weekday, month, day, year } = date.gregorian;
@@ -118,7 +121,7 @@ export function PrayerTimesWidget() {
   // Loading state - only shown when NO cached data
   if (!mounted) {
     return (
-      <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+      <section className={sectionClassName}>
         <PrayerTimesLoadingCard />
       </section>
     );
@@ -127,7 +130,7 @@ export function PrayerTimesWidget() {
   // No location yet - prompt user (only if no cached data)
   if (!hasLocation && !isLoading && !prayers) {
     return (
-      <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+      <section className={sectionClassName}>
         <PrayerTimesLocationPrompt
           onRequestLocation={handleRequestLocation}
           loading={locationLoading}
@@ -140,7 +143,7 @@ export function PrayerTimesWidget() {
   // Loading state - only show if no cached data available
   if (isLoading && !prayers) {
     return (
-      <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+      <section className={sectionClassName}>
         <PrayerTimesLoadingCard />
       </section>
     );
@@ -149,7 +152,7 @@ export function PrayerTimesWidget() {
   // Error state - only show if no fallback data
   if (isError && !prayers) {
     return (
-      <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+      <section className={sectionClassName}>
         <PrayerTimesErrorCard error={error} onRetry={handleRequestLocation} />
       </section>
     );
@@ -158,14 +161,14 @@ export function PrayerTimesWidget() {
   // Should not reach here if no prayers
   if (!prayers || displayPrayers.length === 0) {
     return (
-      <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+      <section className={sectionClassName}>
         <PrayerTimesLoadingCard />
       </section>
     );
   }
 
   return (
-    <section className="relative z-20 mx-auto -mt-24 w-full max-w-[1280px] px-4 sm:-mt-32 sm:px-6 lg:px-8">
+    <section className={sectionClassName}>
       <div className="border-border bg-card overflow-hidden rounded-xl border shadow-xl">
         {/* Top Status Bar */}
         <div className="border-primary/10 bg-primary/5 dark:bg-primary/10 flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4">
@@ -274,7 +277,7 @@ const PrayerGrid = memo(function PrayerGrid({
 }) {
   return (
     <div
-      className={`divide-border grid grid-cols-2 divide-x divide-y sm:grid-cols-3 ${prayers.length === 6 ? 'md:grid-cols-6' : 'md:grid-cols-5'} md:divide-y-0`}
+      className={`divide-border grid grid-cols-2 divide-x divide-y sm:grid-cols-3 md:grid-cols-4 ${prayers.length === 6 ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} md:divide-y-0`}
     >
       {prayers.map((prayer) => (
         <PrayerCell
@@ -327,7 +330,7 @@ const PrayerCell = memo(function PrayerCell({
 
       {/* Prayer name */}
       <span
-        className={`text-xs font-semibold uppercase tracking-wider ${
+        className={`text-sm font-semibold uppercase tracking-wider ${
           isHighlighted ? 'text-white/90' : 'text-muted-foreground'
         }`}
       >
@@ -348,14 +351,14 @@ const PrayerCell = memo(function PrayerCell({
 
       {/* Iqamah time */}
       {prayer.key !== 'sunrise' && (
-        <span className={`text-xs ${isHighlighted ? 'text-white/80' : 'text-muted-foreground/60'}`}>
+        <span className={`text-sm ${isHighlighted ? 'text-white/80' : 'text-muted-foreground/60'}`}>
           Iqamah: {iqamahTime}
         </span>
       )}
 
       {/* Next prayer badge */}
       {isHighlighted && (
-        <span className="absolute right-2 top-2 rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase">
+        <span className="absolute right-2 top-2 rounded bg-white/20 px-1.5 py-0.5 text-xs font-bold uppercase">
           Next
         </span>
       )}
@@ -371,7 +374,7 @@ const PrayerTimesLoadingCard = memo(function PrayerTimesLoadingCard() {
         <Loader2 className="text-primary h-5 w-5 animate-spin" />
         <span className="text-muted-foreground font-medium">Loading prayer times...</span>
       </div>
-      <div className="divide-border grid grid-cols-2 divide-x divide-y sm:grid-cols-3 md:grid-cols-6 md:divide-y-0">
+      <div className="divide-border grid grid-cols-2 divide-x divide-y sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 md:divide-y-0">
         {['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'].map((key) => (
           <div key={key} className="flex flex-col items-center justify-center gap-2 p-6">
             <div className="bg-muted h-3 w-12 animate-pulse rounded" />
@@ -416,7 +419,7 @@ const PrayerTimesLocationPrompt = memo(function PrayerTimesLocationPrompt({
         <button
           onClick={onRequestLocation}
           disabled={loading}
-          className="bg-primary hover:bg-primary/90 disabled:bg-primary/50 inline-flex items-center gap-2 rounded-lg px-6 py-2.5 font-medium text-white transition-colors disabled:cursor-not-allowed"
+          className="bg-primary hover:bg-primary/90 disabled:bg-primary/50 inline-flex items-center gap-2 rounded-xl px-6 py-2.5 font-medium text-white transition-colors disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
@@ -458,7 +461,7 @@ const PrayerTimesErrorCard = memo(function PrayerTimesErrorCard({
         </div>
         <button
           onClick={onRetry}
-          className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-6 py-2.5 font-medium text-white transition-colors"
+          className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-xl px-6 py-2.5 font-medium text-white transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
           Try Again

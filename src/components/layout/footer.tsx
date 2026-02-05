@@ -16,20 +16,38 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const locale = useLocale();
   const t = useTranslations('footer');
   const nav = useTranslations('nav');
   const contactT = useTranslations('contact');
   const content = getSiteContent(locale);
 
+  useEffect(() => {
+    if (status === 'idle') return;
+    const timeout = setTimeout(() => setStatus('idle'), 4000);
+    return () => clearTimeout(timeout);
+  }, [status]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!isValidEmail) {
+      setStatus('error');
+      return;
+    }
+    setStatus('success');
+    setEmail('');
+  };
+
   return (
     <footer className="bg-[hsl(160,35%,8%)] text-white">
-      <div className="container py-16">
+      <div className="container py-12 sm:py-16 lg:py-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* About */}
           <div>
@@ -53,28 +71,28 @@ export function Footer() {
             <div className="flex gap-3">
               <a
                 href="#"
-                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white/70 transition-colors hover:text-white"
+                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/70 transition-colors hover:text-white"
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white/70 transition-colors hover:text-white"
+                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/70 transition-colors hover:text-white"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white/70 transition-colors hover:text-white"
+                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/70 transition-colors hover:text-white"
                 aria-label="YouTube"
               >
                 <Youtube className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white/70 transition-colors hover:text-white"
+                className="hover:bg-primary flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/70 transition-colors hover:text-white"
                 aria-label="Twitter"
               >
                 <Twitter className="h-5 w-5" />
@@ -159,23 +177,42 @@ export function Footer() {
           <div>
             <h3 className="mb-6 text-lg font-semibold">{t('newsletter.title')}</h3>
             <p className="mb-4 text-sm text-white/70">{t('newsletter.description')}</p>
-            <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('newsletter.placeholder')}
-                className="focus:ring-primary flex-1 rounded-lg border-0 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2"
-              />
+            <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={handleSubmit}>
+              <div className="flex-1">
+                <label htmlFor="newsletter-email" className="mb-2 block text-sm font-medium text-white/80">
+                  {t('newsletter.emailLabel')}
+                </label>
+                <input
+                  id="newsletter-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('newsletter.placeholder')}
+                  className="focus:ring-primary w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2"
+                />
+              </div>
               <Button
                 type="submit"
-                size="icon"
-                className="bg-primary hover:bg-primary/90 shrink-0"
+                size="lg"
+                className="bg-primary hover:bg-primary/90 w-full shrink-0 rounded-xl sm:w-auto"
                 aria-label={t('newsletter.subscribe')}
               >
                 <Send className="h-4 w-4" />
+                {t('newsletter.subscribe')}
               </Button>
             </form>
+            {status !== 'idle' && (
+              <p
+                className={`mt-3 text-sm ${
+                  status === 'success' ? 'text-emerald-300' : 'text-red-300'
+                }`}
+                role="status"
+              >
+                {status === 'success' ? t('newsletter.success') : t('newsletter.invalid')}
+              </p>
+            )}
             <p className="mt-3 text-xs text-white/50">{t('newsletter.note')}</p>
           </div>
         </div>

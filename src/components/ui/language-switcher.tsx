@@ -35,11 +35,14 @@ export function LanguageSwitcher() {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1"
+        className="min-w-[3.5rem] justify-center gap-1"
         aria-label="Change language"
+        aria-expanded={isOpen}
       >
         <Globe className="h-4 w-4" />
-        <span className="text-xs">{localeNames[locale]}</span>
+        <span className="min-w-[1.75rem] text-center text-xs font-semibold">
+          {localeNames[locale]}
+        </span>
       </Button>
 
       {isOpen && (

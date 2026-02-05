@@ -8,7 +8,7 @@ import { Link } from '@/i18n/routing';
 import { Heart, Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,6 +23,18 @@ export function Header() {
     { href: '/campus', label: t('campus') },
     { href: '/contact', label: t('contact') },
   ];
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <header className="dark:bg-background/95 sticky top-0 z-50 w-full bg-white/95 shadow-sm backdrop-blur">
@@ -77,6 +89,8 @@ export function Header() {
             size="icon"
             className="lg:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
@@ -86,7 +100,7 @@ export function Header() {
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <div className="dark:bg-background border-t bg-white lg:hidden">
-          <nav className="container flex flex-col gap-1 py-4">
+          <nav id="mobile-nav" className="container flex flex-col gap-1 py-4">
             {navItems.map((item) => (
               <Link
                 key={item.href}

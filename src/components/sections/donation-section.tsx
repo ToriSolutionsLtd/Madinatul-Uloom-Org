@@ -1,12 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { CopyField } from '@/components/ui/copy-field';
 import { Link } from '@/i18n/routing';
 import { Check, Heart, Shield } from 'lucide-react';
+import Image from 'next/image';
 
 export function DonationSection() {
   return (
-    <section className="mx-auto w-full max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8">
+    <section className="section-container section-padding">
       <div className="from-primary/5 via-primary/10 to-primary/5 overflow-hidden rounded-2xl bg-gradient-to-br">
         <div className="flex flex-col items-stretch gap-8 p-8 lg:flex-row lg:gap-12 lg:p-12">
           {/* Left Content */}
@@ -14,7 +16,7 @@ export function DonationSection() {
             <h2 className="mb-4 text-3xl font-bold lg:text-4xl">
               Support Your Mosque. <span className="text-primary">Build Your Akhirah.</span>
             </h2>
-            <p className="text-muted-foreground mb-6 text-lg">
+            <p className="text-muted-foreground mb-6 text-sm sm:text-base">
               Your generous contributions help us maintain the mosque, provide educational programs,
               and support those in need within our community.
             </p>
@@ -33,7 +35,7 @@ export function DonationSection() {
           </div>
 
           {/* Right - Donation Card */}
-          <div className="bg-card flex flex-1 flex-col rounded-xl p-6 shadow-lg lg:max-w-md">
+          <div className="bg-card flex flex-1 flex-col rounded-2xl p-6 shadow-sm lg:max-w-md">
             <div className="mb-5">
               <h3 className="text-foreground text-lg font-bold">Bank Transfer Details</h3>
               <p className="text-muted-foreground mt-1 text-sm">
@@ -41,11 +43,11 @@ export function DonationSection() {
               </p>
             </div>
 
-            <div className="border-border/60 bg-background/70 mb-6 rounded-lg border p-4">
-              <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+            <div className="border-border/60 bg-background/70 mb-6 rounded-xl border p-4">
+              <div className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                 Bank Account
               </div>
-              <div className="mt-3 space-y-2 text-sm">
+              <div className="mt-3 grid gap-3 text-sm">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Account Name</span>
                   <span className="text-foreground font-semibold">Madinatul Uloom Lalmonirhat</span>
@@ -62,33 +64,35 @@ export function DonationSection() {
                   <span className="text-muted-foreground">Branch Name</span>
                   <span className="text-foreground font-semibold">Lalmonirhat Branch</span>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Account Number</span>
-                  <span className="text-foreground font-semibold">34196296</span>
-                </div>
+                <CopyField label="Account Number" value="34196296" className="bg-background" />
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground">Account Type</span>
                   <span className="text-foreground font-semibold">Checking</span>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Routing Number</span>
-                  <span className="text-foreground font-semibold">52100</span>
-                </div>
+                <CopyField label="Routing Number" value="52100" className="bg-background" />
               </div>
             </div>
 
-            <div className="border-border/60 bg-background/70 mb-6 rounded-lg border p-4">
+            <div className="border-border/60 bg-background/70 mb-6 rounded-xl border p-4">
               <div className="flex items-center justify-between gap-4">
-                <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                <div className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                   bKash (Personal)
                 </div>
-                <img src="/images/bkash-logo.png" alt="bKash logo" className="h-8 w-8" />
+                <Image
+                  src="/images/bkash-logo.png"
+                  alt="bKash logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
               </div>
-              <div className="mt-3 space-y-2 text-sm">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Number</span>
-                  <span className="text-foreground font-semibold">+8801774641393</span>
-                </div>
+              <div className="mt-3">
+                <CopyField
+                  label="Number"
+                  value="+8801774641393"
+                  href="tel:+8801774641393"
+                  className="bg-background"
+                />
               </div>
             </div>
 
@@ -96,7 +100,7 @@ export function DonationSection() {
             <Button
               asChild
               size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 mb-4 flex h-14 w-full items-center justify-center gap-2 rounded-lg text-lg font-bold shadow-lg transition-all"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 mb-4 flex h-14 w-full items-center justify-center gap-2 rounded-xl text-lg font-bold shadow-sm transition-all"
             >
               <Link href="/donate">
                 Donate Now

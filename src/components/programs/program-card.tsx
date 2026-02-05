@@ -65,7 +65,7 @@ export function ProgramCard({ program, className }: ProgramCardProps) {
       <div className="flex flex-1 flex-col gap-4 p-6">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">
+          <Badge variant="secondary" className="text-xs font-bold uppercase tracking-wider">
             {program.ageGroup}
           </Badge>
           <span className="text-primary text-sm font-bold">
